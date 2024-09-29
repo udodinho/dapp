@@ -46,11 +46,23 @@ export const useEIP1193InjectedWalletProvider = () => {
         if (accounts.length > 0 && accounts[0] !== account) {
           setAccount(accounts[0]);
           fetchBalance(accounts[0]);
+        }else {
+          setAccount(null)
+          fetchBalance(null)
         }
+
       };
 
-      const handleChainChanged = () => {
-        window.location.reload();
+      const handleChainChanged = async (_chainId) => {
+        try {
+          const walletProvider = new ethers.BrowserProvider(window.ethereum);
+          setProvider(walletProvider);
+
+          const network = await walletProvider.getNetwork();
+          setNetwork(network);
+        } catch (err) {
+          setError(err.message);
+        }
       };
 
       window.ethereum.on("accountsChanged", handleAccountsChanged);
@@ -61,7 +73,7 @@ export const useEIP1193InjectedWalletProvider = () => {
         window.ethereum.removeListener("chainChanged", handleChainChanged);
       };
     }
-  }, [account, fetchBalance]);
+  }, [account, fetchBalance, provider]);
 
   return { account, balance, network, error, connectWallet, fetchBalance };
 }
